@@ -1,5 +1,4 @@
 #include <stm32l4xx_hal.h>
-#include <memory.h>
 #include <stdio.h>
 
 #include "modules/sys.h"
@@ -35,15 +34,41 @@ void TIM2_IRQHandler(void) {
     HAL_TIM_IRQHandler(&ir_htim);
 }
 
+#define PILOT_ON    318
+#define PILOT_TIMER 315
+#define PILOT_MODE  317
+#define PILOT_OFF   319
+
 int main(void) {
     HAL_Init();
 
     SystemClock_Config();
     UART_Init();
     IR_Init();
-    Motor_Init();
+    Motor_Init(MOTOR_LEFT);
+    Motor_Init(MOTOR_RIGHT);
+
+    uint32_t ir_value = 0;
 
     while (1) {
-        HAL_Delay(500);
+        ir_value = IR_GetValue();
+        if (ir_value != 0) {
+            printf("IR = %04lX\n", ir_value);
+        }
+
+        if (ir_value == PILOT_ON) {
+            Motor_Write(MOTOR_LEFT, MOTOR_DIR_FORWARD, MOTOR_SPEED_START);
+            Motor_Write(MOTOR_RIGHT, MOTOR_DIR_FORWARD, MOTOR_SPEED_START);
+        } else if (ir_value == PILOT_MODE) {
+            Motor_Write(MOTOR_LEFT, MOTOR_DIR_FORWARD, MOTOR_SPEED_START);
+            Motor_Write(MOTOR_RIGHT, MOTOR_DIR_BACKWARD, MOTOR_SPEED_START);
+        } else if (ir_value == PILOT_TIMER) {
+            Motor_Write(MOTOR_LEFT, MOTOR_DIR_BACKWARD, MOTOR_SPEED_START);
+            Motor_Write(MOTOR_RIGHT, MOTOR_DIR_FORWARD, MOTOR_SPEED_START);
+        } else if (ir_value == PILOT_OFF) {
+            Motor_Pause(MOTOR_LEFT);
+            Motor_Pause(MOTOR_RIGHT);
+        }
+        HAL_Delay(100);
     }
 }

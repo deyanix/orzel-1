@@ -11,19 +11,30 @@ int __io_putchar(int ch) {
 }
 
 void UART_HandleInit(UART_HandleTypeDef* huart) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
     RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+
     if (huart->Instance == USART2) {
         PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
         PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
         SYS_HandleError(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit));
 
         __HAL_RCC_USART2_CLK_ENABLE();
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+
+        GPIO_InitStruct.Pin = USART_TX_Pin|USART_RX_Pin;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+        GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
+        HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
     }
 }
 
 void UART_HandleDeInit(UART_HandleTypeDef* huart) {
     if (huart->Instance == USART2) {
         __HAL_RCC_USART2_CLK_DISABLE();
+        HAL_GPIO_DeInit(GPIOA, USART_TX_Pin|USART_RX_Pin);
     }
 }
 

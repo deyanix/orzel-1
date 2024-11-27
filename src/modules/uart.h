@@ -4,6 +4,11 @@
 #ifndef UART_H
 #define UART_H
 
+#define USART_TX_Pin GPIO_PIN_2
+#define USART_TX_GPIO_Port GPIOA
+#define USART_RX_Pin GPIO_PIN_3
+#define USART_RX_GPIO_Port GPIOA
+
 UART_HandleTypeDef huart2;
 
 int _write(int file, char *ptr, int len);
