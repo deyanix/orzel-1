@@ -21,6 +21,7 @@ size_t IR_Counter;
 ir_pulse_t IR_DecodePulse(uint32_t pulseWidth);
 void IR_Init(void);
 void IR_TIM_Init(TIM_HandleTypeDef* htim_base);
+void IR_TIM_DeInit(TIM_HandleTypeDef* htim_base);
 void IR_HandleCapture(TIM_HandleTypeDef *htim);
 uint16_t IR_GetValue(void);
 

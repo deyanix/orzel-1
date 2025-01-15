@@ -26,7 +26,7 @@ extern const Motor_TypeDef __motor4;
 #define MOTOR3              (&__motor3)
 #define MOTOR4              (&__motor4)
 
-#define MOTOR_LEFT          MOTOR1
+#define MOTOR_LEFT          MOTOR2
 #define MOTOR_RIGHT         MOTOR4
 
 void Motor_Init(const Motor_TypeDef* motor);

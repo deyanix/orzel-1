@@ -5,9 +5,20 @@
 #include "modules/uart.h"
 #include "modules/ir.h"
 #include "modules/motor.h"
+#include "modules/ultrasonic.h"
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    //sth
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+}
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
     IR_HandleCapture(htim);
+}
+
+void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim) {
+    //sth
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
 }
 
 void HAL_MspInit(void) {
@@ -16,6 +27,13 @@ void HAL_MspInit(void) {
 
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base) {
     IR_TIM_Init(htim_base);
+    if (htim_base->Instance==TIM4) {
+        __HAL_RCC_TIM4_CLK_ENABLE();
+    }
+}
+
+void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base) {
+    IR_TIM_DeInit(htim_base);
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef* huart) {
@@ -45,11 +63,13 @@ int main(void) {
     SystemClock_Config();
     UART_Init();
     IR_Init();
+    US_Init();
     Motor_Init(MOTOR_LEFT);
     Motor_Init(MOTOR_RIGHT);
 
     uint32_t ir_value = 0;
 
+    printf("Start\n");
     while (1) {
         ir_value = IR_GetValue();
         if (ir_value != 0) {

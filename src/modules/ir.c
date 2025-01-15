@@ -66,6 +66,15 @@ void IR_TIM_Init(TIM_HandleTypeDef* htim_base) {
     }
 }
 
+void IR_TIM_DeInit(TIM_HandleTypeDef* htim_base) {
+    if (htim_base->Instance == TIM2) {
+        __HAL_RCC_TIM2_CLK_DISABLE();
+
+        HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
+        HAL_NVIC_DisableIRQ(TIM2_IRQn);
+    }
+}
+
 void IR_HandleCapture(TIM_HandleTypeDef *htim) {
     uint32_t pulseWidth;
     ir_pulse_t pulse;
