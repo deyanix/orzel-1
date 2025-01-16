@@ -1,5 +1,7 @@
 #include <stm32l4xx_hal.h>
+#include <stdio.h>
 #include "sys.h"
+#include "timer.h"
 
 #ifndef IR_H
 #define IR_H
@@ -10,19 +12,14 @@ typedef enum {
     PULSE_SHORT,
     PULSE_HIGH,
     PULSE_UNKNOWN,
-} ir_pulse_t;
-
-TIM_HandleTypeDef ir_htim;
+} IR_Pulse;
 
 uint16_t IR_LastValue;
 uint16_t IR_CurrentValue;
 size_t IR_Counter;
 
-ir_pulse_t IR_DecodePulse(uint32_t pulseWidth);
-void IR_Init(void);
-void IR_TIM_Init(TIM_HandleTypeDef* htim_base);
-void IR_TIM_DeInit(TIM_HandleTypeDef* htim_base);
-void IR_HandleCapture(TIM_HandleTypeDef *htim);
+IR_Pulse IR_DecodePulse(uint32_t pulseWidth);
+void IR_Timer_CaptureCallback(TIM_HandleTypeDef *htim);
 uint16_t IR_GetValue(void);
 
 #endif //IR_H

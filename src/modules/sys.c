@@ -40,8 +40,3 @@ void SYS_HandleError(HAL_StatusTypeDef status) {
         Error_Handler();
     }
 }
-
-void SYS_DelayUs(uint32_t delay) {
-    __HAL_TIM_SET_COUNTER(&htim6, 0);
-    while (__HAL_TIM_GET_COUNTER(&htim6) < delay);
-}

@@ -26,7 +26,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
-//    IR_HandleCapture(htim);
+    IR_Timer_CaptureCallback(htim);
 }
 
 void HAL_MspInit(void) {
@@ -34,28 +34,11 @@ void HAL_MspInit(void) {
 }
 
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base) {
-    IR_TIM_Init(htim_base);
-
-    if (htim_base->Instance == TIM6) {
-        __HAL_RCC_TIM6_CLK_ENABLE();
-    }
-    if (htim_base->Instance == TIM8) {
-        __HAL_RCC_TIM8_CLK_ENABLE();
-
-        HAL_NVIC_SetPriority(TIM8_UP_IRQn, 0, 0);
-        HAL_NVIC_EnableIRQ(TIM8_UP_IRQn);
-    }
+    Timer_Base_Init(htim_base);
 }
 
 void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base) {
-//    IR_TIM_DeInit(htim_base);
-    if (htim_base->Instance == TIM8) {
-        __HAL_RCC_TIM8_CLK_DISABLE();
-
-        HAL_NVIC_DisableIRQ(TIM8_BRK_IRQn);
-        HAL_NVIC_DisableIRQ(TIM8_UP_IRQn);
-        HAL_NVIC_DisableIRQ(TIM8_TRG_COM_IRQn);
-    }
+    Timer_Base_DeInit(htim_base);
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef* huart) {
@@ -70,14 +53,6 @@ void SysTick_Handler(void) {
     HAL_IncTick();
 }
 
-void TIM2_IRQHandler(void) {
-//    HAL_TIM_IRQHandler(&ir_htim);
-}
-
-void TIM8_IRQHandler(void) {
-    HAL_TIM_IRQHandler(&htim8);
-}
-
 #define PILOT_ON    318
 #define PILOT_TIMER 315
 #define PILOT_MODE  317
@@ -87,11 +62,13 @@ int main(void) {
     HAL_Init();
 
     SystemClock_Config();
+    Timer_Init();
     UART_Init();
-//    IR_Init();
-    US_Init();
+    Ultrasonic_Init();
     Motor_Init(MOTOR_LEFT);
     Motor_Init(MOTOR_RIGHT);
+
+    Timer_Start();
 
     uint32_t ir_value = 0;
 
@@ -99,7 +76,7 @@ int main(void) {
     while (1) {
         ir_value = IR_GetValue();
         if (ir_value != 0) {
-            printf("IR = %04lX\n", ir_value);
+            printf("IR = %04lu\n", ir_value);
         }
 
         if (ir_value == PILOT_ON) {

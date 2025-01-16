@@ -1,5 +1,6 @@
 #include <stm32l4xx_hal.h>
 #include "sys.h"
+#include "timer.h"
 
 #ifndef ULTRASONIC_H
 #define ULTRASONIC_H
@@ -11,10 +12,8 @@ typedef enum {
 } Ultrasonic_StateTypeDef;
 
 typedef const struct {
-    GPIO_TypeDef* TriggerPort;
-    uint32_t TriggerPin;
-    GPIO_TypeDef* EchoPort;
-    uint32_t EchoPin;
+    Gpio_PinTypeDef *TriggerPin;
+    Gpio_PinTypeDef *EchoPin;
     Ultrasonic_StateTypeDef State;
 } Ultrasonic_TypeDef;
 
@@ -33,7 +32,7 @@ extern Ultrasonic_TypeDef __ultrasonicRight;
 #define ULTRASONIC_RIGHT        (&__ultrasonicRight)
 #define ULTRASONIC_RIGHT_IDX    2
 
-void US_Init(void);
+void Ultrasonic_Init(void);
 void Ultrasonic_Request(Ultrasonic_TypeDef *ultrasonic);
 
 #endif //ULTRASONIC_H

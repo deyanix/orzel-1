@@ -1,20 +1,19 @@
 #include <stm32l4xx_hal.h>
 #include "sys.h"
+#include "gpio.h"
 
 #ifndef MOTOR_H
 #define MOTOR_H
 
-typedef struct {
-    GPIO_TypeDef* SpeedPort;
-    uint32_t SpeedPin;
-    GPIO_TypeDef* DirectionPort;
-    uint32_t DirectionPin;
+typedef const struct {
+    Gpio_PinTypeDef *SpeedPin;
+    Gpio_PinTypeDef *DirectionPin;
 } Motor_TypeDef;
 
-extern const Motor_TypeDef __motor1;
-extern const Motor_TypeDef __motor2;
-extern const Motor_TypeDef __motor3;
-extern const Motor_TypeDef __motor4;
+extern Motor_TypeDef __motor1;
+extern Motor_TypeDef __motor2;
+extern Motor_TypeDef __motor3;
+extern Motor_TypeDef __motor4;
 
 #define MOTOR_DIR_FORWARD   GPIO_PIN_RESET
 #define MOTOR_DIR_BACKWARD  GPIO_PIN_SET
