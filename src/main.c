@@ -7,6 +7,24 @@
 #include "modules/motor.h"
 #include "modules/ultrasonic.h"
 
+uint8_t currentSensor = 0;
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    Ultrasonic_TypeDef *ultrasonic;
+
+    if (htim->Instance == TIM8) {
+        currentSensor = (currentSensor + 1) % ULTRASONIC_MAX_IDX;
+        switch (currentSensor) {
+            case ULTRASONIC_LEFT_IDX: ultrasonic = ULTRASONIC_LEFT; break;
+            case ULTRASONIC_CENTER_IDX: ultrasonic = ULTRASONIC_CENTER; break;
+            case ULTRASONIC_RIGHT_IDX: ultrasonic = ULTRASONIC_RIGHT; break;
+            default: return;
+        }
+
+        Ultrasonic_Request(ultrasonic);
+    }
+}
+
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 //    IR_HandleCapture(htim);
 }
@@ -18,29 +36,26 @@ void HAL_MspInit(void) {
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base) {
     IR_TIM_Init(htim_base);
 
+    if (htim_base->Instance == TIM6) {
+        __HAL_RCC_TIM6_CLK_ENABLE();
+    }
     if (htim_base->Instance == TIM8) {
         __HAL_RCC_TIM8_CLK_ENABLE();
-        __HAL_RCC_DMA2_CLK_ENABLE();
 
-        hdma_tim8_ch1.Instance = DMA2_Channel6;
-        hdma_tim8_ch1.Init.Request = DMA_REQUEST_7;
-        hdma_tim8_ch1.Init.Direction = DMA_MEMORY_TO_PERIPH;
-        hdma_tim8_ch1.Init.PeriphInc = DMA_PINC_DISABLE;
-        hdma_tim8_ch1.Init.MemInc = DMA_MINC_ENABLE;
-        hdma_tim8_ch1.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD ;
-        hdma_tim8_ch1.Init.MemDataAlignment = DMA_MDATAALIGN_WORD ;
-        hdma_tim8_ch1.Init.Mode = DMA_CIRCULAR;
-        hdma_tim8_ch1.Init.Priority = DMA_PRIORITY_HIGH;
-        if (HAL_DMA_Init(&hdma_tim8_ch1) != HAL_OK) {
-            Error_Handler();
-        }
-
-        __HAL_LINKDMA(htim_base, hdma[TIM_DMA_ID_CC1], hdma_tim8_ch1);
+        HAL_NVIC_SetPriority(TIM8_UP_IRQn, 0, 0);
+        HAL_NVIC_EnableIRQ(TIM8_UP_IRQn);
     }
 }
 
 void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base) {
 //    IR_TIM_DeInit(htim_base);
+    if (htim_base->Instance == TIM8) {
+        __HAL_RCC_TIM8_CLK_DISABLE();
+
+        HAL_NVIC_DisableIRQ(TIM8_BRK_IRQn);
+        HAL_NVIC_DisableIRQ(TIM8_UP_IRQn);
+        HAL_NVIC_DisableIRQ(TIM8_TRG_COM_IRQn);
+    }
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef* huart) {
@@ -57,6 +72,10 @@ void SysTick_Handler(void) {
 
 void TIM2_IRQHandler(void) {
 //    HAL_TIM_IRQHandler(&ir_htim);
+}
+
+void TIM8_IRQHandler(void) {
+    HAL_TIM_IRQHandler(&htim8);
 }
 
 #define PILOT_ON    318
