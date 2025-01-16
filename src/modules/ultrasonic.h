@@ -9,7 +9,8 @@
 #define US1_ECHO_PIN GPIO_PIN_7
 #define US1_ECHO_PORT GPIOC
 
-TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim8;
+DMA_HandleTypeDef hdma_tim8_ch1;
 
 void US_Init(void);
 
