@@ -8,6 +8,7 @@
 Motor_TypeDef __motor1 = {
     .SpeedPin       = GPIO_D3,
     .DirectionPin   = GPIO_D4,
+    .State          = MOTOR_BLOCKED,
 };
 
 /**
@@ -18,6 +19,7 @@ Motor_TypeDef __motor1 = {
 Motor_TypeDef __motor2 = {
     .SpeedPin       = GPIO_D11,
     .DirectionPin   = GPIO_D12,
+    .State          = MOTOR_BLOCKED,
 };
 
 /**
@@ -28,6 +30,7 @@ Motor_TypeDef __motor2 = {
 Motor_TypeDef __motor3 = {
     .SpeedPin       = GPIO_D5,
     .DirectionPin   = GPIO_D8,
+    .State          = MOTOR_BLOCKED,
 };
 
 /**
@@ -38,6 +41,7 @@ Motor_TypeDef __motor3 = {
 Motor_TypeDef __motor4 = {
     .SpeedPin       = GPIO_D6,
     .DirectionPin   = GPIO_D7,
+    .State          = MOTOR_BLOCKED,
 };
 
 void Motor_Init(const Motor_TypeDef* motor) {
@@ -58,6 +62,11 @@ inline void Motor_WriteDirection(const Motor_TypeDef* motor, GPIO_PinState direc
 inline void Motor_Write(const Motor_TypeDef* motor, GPIO_PinState direction, GPIO_PinState speed) {
     Motor_WriteDirection(motor, direction);
     Motor_WriteSpeed(motor, speed);
+}
+
+inline void Motor_Block(const Motor_TypeDef* motor) {
+    Motor_Pause(motor);
+    motor->State = MOTOR_BLOCKED;
 }
 
 inline void Motor_Resume(const Motor_TypeDef* motor) {

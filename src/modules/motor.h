@@ -5,9 +5,15 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-typedef const struct {
+typedef const enum {
+    MOTOR_BLOCKED = 0x00,
+    MOTOR_UNBLOCKED = 0x01,
+} Motor_State;
+
+typedef struct {
     Gpio_PinTypeDef *SpeedPin;
     Gpio_PinTypeDef *DirectionPin;
+    Motor_State State;
 } Motor_TypeDef;
 
 extern Motor_TypeDef __motor1;

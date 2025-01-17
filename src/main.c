@@ -10,19 +10,19 @@
 uint8_t currentSensor = 0;
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-    Ultrasonic_TypeDef *ultrasonic;
-
-    if (htim->Instance == TIM8) {
-        currentSensor = (currentSensor + 1) % ULTRASONIC_MAX_IDX;
-        switch (currentSensor) {
-            case ULTRASONIC_LEFT_IDX: ultrasonic = ULTRASONIC_LEFT; break;
-            case ULTRASONIC_CENTER_IDX: ultrasonic = ULTRASONIC_CENTER; break;
-            case ULTRASONIC_RIGHT_IDX: ultrasonic = ULTRASONIC_RIGHT; break;
-            default: return;
-        }
-
-        Ultrasonic_Request(ultrasonic);
-    }
+//    Ultrasonic_TypeDef *ultrasonic;
+//
+//    if (htim->Instance == TIM8) {
+//        currentSensor = (currentSensor + 1) % ULTRASONIC_MAX_IDX;
+//        switch (currentSensor) {
+//            case ULTRASONIC_LEFT_IDX: ultrasonic = ULTRASONIC_LEFT; break;
+//            case ULTRASONIC_CENTER_IDX: ultrasonic = ULTRASONIC_CENTER; break;
+//            case ULTRASONIC_RIGHT_IDX: ultrasonic = ULTRASONIC_RIGHT; break;
+//            default: return;
+//        }
+//
+//        Ultrasonic_Request(ultrasonic);
+//    }
 }
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
@@ -74,6 +74,23 @@ int main(void) {
 
     printf("Start\n");
     while (1) {
+        Ultrasonic_Request(ULTRASONIC_LEFT);
+        Ultrasonic_Read(ULTRASONIC_LEFT);
+
+        Ultrasonic_Request(ULTRASONIC_CENTER);
+        Ultrasonic_Read(ULTRASONIC_CENTER);
+
+        Ultrasonic_Request(ULTRASONIC_RIGHT);
+        Ultrasonic_Read(ULTRASONIC_RIGHT);
+
+        printf("Distance = %12lu cm (%5lu) %12lu cm (%5lu) %12lu cm (%5lu)\n",
+               ULTRASONIC_LEFT_DISTANCE->NormalizedDistance,
+               ULTRASONIC_LEFT_DISTANCE->Variability,
+               ULTRASONIC_CENTER_DISTANCE->NormalizedDistance,
+               ULTRASONIC_CENTER_DISTANCE->Variability,
+               ULTRASONIC_RIGHT_DISTANCE->NormalizedDistance,
+               ULTRASONIC_RIGHT_DISTANCE->Variability);
+
         ir_value = IR_GetValue();
         if (ir_value != 0) {
             printf("IR = %04lu\n", ir_value);
