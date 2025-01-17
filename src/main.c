@@ -58,6 +58,17 @@ void SysTick_Handler(void) {
 #define PILOT_MODE  317
 #define PILOT_OFF   319
 
+typedef enum {
+    ROBOT_EXPLORE = 0x00,
+    ROBOT_OBSERVE1 = 0x01,
+    ROBOT_ROTATE1 = 0x02,
+    ROBOT_SHIFT = 0x03,
+    ROBOT_ROTATE2 = 0x09,
+} Robot_State;
+
+uint8_t RobotActive = 0x00;
+Robot_State RobotState = ROBOT_EXPLORE;
+
 int main(void) {
     HAL_Init();
 
@@ -70,44 +81,106 @@ int main(void) {
 
     Timer_Start();
 
-    uint32_t ir_value = 0;
-
     printf("Start\n");
     while (1) {
         Ultrasonic_Request(ULTRASONIC_LEFT);
         Ultrasonic_Read(ULTRASONIC_LEFT);
-
         Ultrasonic_Request(ULTRASONIC_CENTER);
         Ultrasonic_Read(ULTRASONIC_CENTER);
-
         Ultrasonic_Request(ULTRASONIC_RIGHT);
         Ultrasonic_Read(ULTRASONIC_RIGHT);
 
-        printf("Distance = %12lu cm (%5lu) %12lu cm (%5lu) %12lu cm (%5lu)\n",
-               ULTRASONIC_LEFT_DISTANCE->NormalizedDistance,
-               ULTRASONIC_LEFT_DISTANCE->Variability,
-               ULTRASONIC_CENTER_DISTANCE->NormalizedDistance,
-               ULTRASONIC_CENTER_DISTANCE->Variability,
-               ULTRASONIC_RIGHT_DISTANCE->NormalizedDistance,
-               ULTRASONIC_RIGHT_DISTANCE->Variability);
+        uint8_t variabilityLeft = ULTRASONIC_LEFT->Distance->Variability < 10 && ULTRASONIC_LEFT->Distance->NormalizedDistance < 400;
+        uint8_t variabilityCenter = ULTRASONIC_CENTER->Distance->Variability < 10 && ULTRASONIC_CENTER->Distance->NormalizedDistance < 400;
+        uint8_t variabilityRight = ULTRASONIC_RIGHT->Distance->Variability < 10 && ULTRASONIC_RIGHT->Distance->NormalizedDistance < 400;
 
-        ir_value = IR_GetValue();
-        if (ir_value != 0) {
-            printf("IR = %04lu\n", ir_value);
+        uint8_t distanceLeft = ULTRASONIC_LEFT->Distance->NormalizedDistance >= 30;
+        uint8_t distanceCenter = ULTRASONIC_CENTER->Distance->NormalizedDistance >= 30;
+        uint8_t distanceRight = ULTRASONIC_RIGHT->Distance->NormalizedDistance >= 30;
+
+        if ((variabilityLeft && !distanceLeft) || (variabilityCenter && !distanceCenter) || (variabilityRight && !distanceRight)) {
+            if (RobotState == ROBOT_EXPLORE) {
+                RobotState = ROBOT_OBSERVE1;
+                Timer_Measure_Start();
+                Timer_Measure_Reset();
+            } else if (RobotState == ROBOT_SHIFT) {
+                RobotState = ROBOT_ROTATE2;
+                Timer_Measure_Start();
+                Timer_Measure_Reset();
+            }
+        } else if (variabilityLeft && variabilityCenter && variabilityRight) {
+            if (RobotState == ROBOT_OBSERVE1) {
+                RobotState = ROBOT_EXPLORE;
+                Timer_Measure_Stop();
+            }
         }
 
-        if (ir_value == PILOT_ON) {
-            Motor_Write(MOTOR_LEFT, MOTOR_DIR_FORWARD, MOTOR_SPEED_START);
-            Motor_Write(MOTOR_RIGHT, MOTOR_DIR_FORWARD, MOTOR_SPEED_START);
-        } else if (ir_value == PILOT_MODE) {
-            Motor_Write(MOTOR_LEFT, MOTOR_DIR_FORWARD, MOTOR_SPEED_START);
-            Motor_Write(MOTOR_RIGHT, MOTOR_DIR_BACKWARD, MOTOR_SPEED_START);
-        } else if (ir_value == PILOT_TIMER) {
-            Motor_Write(MOTOR_LEFT, MOTOR_DIR_BACKWARD, MOTOR_SPEED_START);
-            Motor_Write(MOTOR_RIGHT, MOTOR_DIR_FORWARD, MOTOR_SPEED_START);
-        } else if (ir_value == PILOT_OFF) {
-            Motor_Pause(MOTOR_LEFT);
-            Motor_Pause(MOTOR_RIGHT);
+        switch (IR_GetValue()) {
+            case PILOT_ON:
+                RobotActive = 0x01;
+                Timer_Measure_Start();
+                break;
+            case PILOT_OFF:
+                RobotActive = 0x00;
+                Timer_Measure_Stop();
+                break;
+            default:
+                break;
+        }
+
+        if (RobotActive) {
+            switch (RobotState) {
+                case ROBOT_EXPLORE:
+                    Motor_WriteSpeed(MOTOR_LEFT, MOTOR_SPEED_START);
+                    Motor_WriteSpeed(MOTOR_RIGHT, MOTOR_SPEED_START);
+                    Motor_WriteDirection(MOTOR_LEFT, MOTOR_DIR_FORWARD);
+                    Motor_WriteDirection(MOTOR_RIGHT, MOTOR_DIR_FORWARD);
+                    break;
+                case ROBOT_SHIFT:
+                    Motor_WriteSpeed(MOTOR_LEFT, MOTOR_SPEED_START);
+                    Motor_WriteSpeed(MOTOR_RIGHT, MOTOR_SPEED_START);
+                    Motor_WriteDirection(MOTOR_LEFT, MOTOR_DIR_FORWARD);
+                    Motor_WriteDirection(MOTOR_RIGHT, MOTOR_DIR_FORWARD);
+                    if (Timer_Measure_GetValue() > 1500) {
+                        Timer_Measure_Stop();
+                        RobotState = ROBOT_ROTATE2;
+                    }
+                    break;
+                case ROBOT_OBSERVE1:
+                    Motor_WriteSpeed(MOTOR_LEFT, MOTOR_SPEED_STOP);
+                    Motor_WriteSpeed(MOTOR_RIGHT, MOTOR_SPEED_STOP);
+                    if (Timer_Measure_GetValue() > 5000) {
+                        Timer_Measure_Reset();
+                        RobotState = ROBOT_ROTATE1;
+                    }
+                    break;
+                case ROBOT_ROTATE1:
+                    Motor_WriteSpeed(MOTOR_LEFT, MOTOR_SPEED_START);
+                    Motor_WriteSpeed(MOTOR_RIGHT, MOTOR_SPEED_START);
+                    Motor_WriteDirection(MOTOR_LEFT, MOTOR_DIR_BACKWARD);
+                    Motor_WriteDirection(MOTOR_RIGHT, MOTOR_DIR_FORWARD);
+                    if (Timer_Measure_GetValue() > 750) {
+                        Timer_Measure_Reset();
+                        RobotState = ROBOT_SHIFT;
+                    }
+                    break;
+                case ROBOT_ROTATE2:
+                    Motor_WriteSpeed(MOTOR_LEFT, MOTOR_SPEED_START);
+                    Motor_WriteSpeed(MOTOR_RIGHT, MOTOR_SPEED_START);
+                    Motor_WriteDirection(MOTOR_LEFT, MOTOR_DIR_BACKWARD);
+                    Motor_WriteDirection(MOTOR_RIGHT, MOTOR_DIR_FORWARD);
+                    if (Timer_Measure_GetValue() > 750) {
+                        printf("STATE -> EXPLORE %lu\n", Timer_Measure_GetValue());
+                        Timer_Measure_Reset();
+                        RobotState = ROBOT_EXPLORE;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            Motor_WriteSpeed(MOTOR_LEFT, MOTOR_SPEED_STOP);
+            Motor_WriteSpeed(MOTOR_RIGHT, MOTOR_SPEED_STOP);
         }
         HAL_Delay(100);
     }

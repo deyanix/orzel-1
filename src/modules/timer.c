@@ -1,5 +1,23 @@
 #include "timer.h"
 
+void Timer_Measure_Start(void) {
+    if (htim7.State == HAL_TIM_STATE_READY) {
+        Timer7_Start();
+    }
+}
+
+void Timer_Measure_Stop(void) {
+    Timer7_Stop();
+}
+
+void Timer_Measure_Reset(void) {
+    __HAL_TIM_SET_COUNTER(&htim7, 0);
+}
+
+uint32_t Timer_Measure_GetValue(void) {
+    return __HAL_TIM_GET_COUNTER(&htim7) / 10;
+}
+
 void Timer_DelayUs(uint32_t delay) {
     __HAL_TIM_SET_COUNTER(&htim6, 0);
     while (__HAL_TIM_GET_COUNTER(&htim6) < delay);
@@ -11,6 +29,7 @@ void Timer_Init(void) {
     Timer3_Init();
     Timer4_Init();
     Timer6_Init();
+    Timer7_Init();
     Timer8_Init();
 }
 
@@ -25,6 +44,8 @@ void Timer_Base_Init(TIM_HandleTypeDef *htim) {
         Timer4_Base_Init();
     } else if (htim->Instance == TIM6) {
         Timer6_Base_Init();
+    } else if (htim->Instance == TIM7) {
+        Timer7_Base_Init();
     } else if (htim->Instance == TIM8) {
         Timer8_Base_Init();
     }
@@ -41,6 +62,8 @@ void Timer_Base_DeInit(TIM_HandleTypeDef *htim) {
         Timer4_Base_DeInit();
     } else if (htim->Instance == TIM6) {
         Timer6_Base_DeInit();
+    } else if (htim->Instance == TIM7) {
+        Timer7_Base_DeInit();
     } else if (htim->Instance == TIM8) {
         Timer8_Base_DeInit();
     }
@@ -289,8 +312,50 @@ void Timer6_Base_Init(void) {
     __HAL_RCC_TIM6_CLK_ENABLE();
 }
 
+void Timer6_Base_DeInit(void) {
+    __HAL_RCC_TIM6_CLK_DISABLE();
+}
+
 void Timer6_Start(void) {
     SYS_HandleError(HAL_TIM_Base_Start(&htim6));
+}
+
+void Timer7_Init(void) {
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    htim7.Instance = TIM7;
+    htim7.Init.Prescaler = 7999; // 10 kHz -> 0.1 ms
+    htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim7.Init.Period = 0xFFFF;
+    htim7.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim7.Init.RepetitionCounter = 0;
+    htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    SYS_HandleError(HAL_TIM_Base_Init(&htim7));
+
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    SYS_HandleError(HAL_TIM_ConfigClockSource(&htim7, &sClockSourceConfig));
+
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterOutputTrigger2 = TIM_TRGO2_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    SYS_HandleError(HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig));
+}
+
+void Timer7_Base_Init(void) {
+    __HAL_RCC_TIM7_CLK_ENABLE();
+}
+
+void Timer7_Base_DeInit(void) {
+    __HAL_RCC_TIM7_CLK_DISABLE();
+}
+
+void Timer7_Start(void) {
+    SYS_HandleError(HAL_TIM_Base_Start(&htim7));
+}
+
+void Timer7_Stop(void) {
+    SYS_HandleError(HAL_TIM_Base_Stop(&htim7));
 }
 
 void Timer8_Init(void) {

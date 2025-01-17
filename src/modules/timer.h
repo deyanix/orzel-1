@@ -10,8 +10,13 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim8;
 
+void Timer_Measure_Start(void);
+void Timer_Measure_Stop(void);
+void Timer_Measure_Reset(void);
+uint32_t Timer_Measure_GetValue(void);
 void Timer_DelayUs(uint32_t delay);
 void Timer_Init(void);
 void Timer_Base_Init(TIM_HandleTypeDef *htim);
@@ -42,6 +47,12 @@ void Timer6_Init(void);
 void Timer6_Base_Init(void);
 void Timer6_Base_DeInit(void);
 void Timer6_Start(void);
+
+void Timer7_Init(void);
+void Timer7_Base_Init(void);
+void Timer7_Base_DeInit(void);
+void Timer7_Start(void);
+void Timer7_Stop(void);
 
 void Timer8_Init(void);
 void Timer8_Base_Init(void);

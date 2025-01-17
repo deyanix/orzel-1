@@ -5,15 +5,9 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-typedef const enum {
-    MOTOR_BLOCKED = 0x00,
-    MOTOR_UNBLOCKED = 0x01,
-} Motor_State;
-
-typedef struct {
+typedef const struct {
     Gpio_PinTypeDef *SpeedPin;
     Gpio_PinTypeDef *DirectionPin;
-    Motor_State State;
 } Motor_TypeDef;
 
 extern Motor_TypeDef __motor1;
@@ -34,11 +28,13 @@ extern Motor_TypeDef __motor4;
 #define MOTOR_LEFT          MOTOR2
 #define MOTOR_RIGHT         MOTOR4
 
-void Motor_Init(const Motor_TypeDef* motor);
-void Motor_WriteSpeed(const Motor_TypeDef* motor, GPIO_PinState speed);
-void Motor_WriteDirection(const Motor_TypeDef* motor, GPIO_PinState speed);
-void Motor_Write(const Motor_TypeDef* motor, GPIO_PinState direction, GPIO_PinState speed);
-void Motor_Resume(const Motor_TypeDef* motor);
-void Motor_Pause(const Motor_TypeDef* motor);
+void Motor_Init(Motor_TypeDef* motor);
+void Motor_WriteSpeed(Motor_TypeDef* motor, GPIO_PinState speed);
+void Motor_WriteDirection(Motor_TypeDef* motor, GPIO_PinState speed);
+void Motor_Write(Motor_TypeDef* motor, GPIO_PinState direction, GPIO_PinState speed);
+
+void Motor_Resume(Motor_TypeDef* motor);
+void Motor_Pause(Motor_TypeDef* motor);
+
 
 #endif //MOTOR_H
