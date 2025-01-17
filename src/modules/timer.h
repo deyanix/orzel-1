@@ -12,6 +12,7 @@ TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim8;
+TIM_HandleTypeDef htim15;
 
 void Timer_Measure_Start(void);
 void Timer_Measure_Stop(void);
@@ -59,8 +60,14 @@ void Timer8_Base_Init(void);
 void Timer8_Base_DeInit(void);
 void Timer8_Start(void);
 
+void Timer15_Init(void);
+void Timer15_Base_Init(void);
+void Timer15_Base_DeInit(void);
+void Timer15_Start(void);
+
 void TIM2_IRQHandler(void);
 void TIM6_IRQHandler(void);
 void TIM8_IRQHandler(void);
+void TIM1_BRK_TIM15_IRQHandler(void);
 
 #endif //TIMER_H

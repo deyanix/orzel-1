@@ -1,29 +1,12 @@
 #include <stm32l4xx_hal.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "modules/sys.h"
 #include "modules/uart.h"
 #include "modules/ir.h"
 #include "modules/motor.h"
 #include "modules/ultrasonic.h"
-
-uint8_t currentSensor = 0;
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-//    Ultrasonic_TypeDef *ultrasonic;
-//
-//    if (htim->Instance == TIM8) {
-//        currentSensor = (currentSensor + 1) % ULTRASONIC_MAX_IDX;
-//        switch (currentSensor) {
-//            case ULTRASONIC_LEFT_IDX: ultrasonic = ULTRASONIC_LEFT; break;
-//            case ULTRASONIC_CENTER_IDX: ultrasonic = ULTRASONIC_CENTER; break;
-//            case ULTRASONIC_RIGHT_IDX: ultrasonic = ULTRASONIC_RIGHT; break;
-//            default: return;
-//        }
-//
-//        Ultrasonic_Request(ultrasonic);
-//    }
-}
 
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
     IR_Timer_CaptureCallback(htim);
@@ -42,11 +25,11 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef* htim_base) {
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef* huart) {
-    UART_HandleInit(huart);
+    UART_InitPerhiph(huart);
 }
 
 void HAL_UART_MspDeInit(UART_HandleTypeDef* huart) {
-    UART_HandleDeInit(huart);
+    UART_DeInitPerhiph(huart);
 }
 
 void SysTick_Handler(void) {
@@ -81,8 +64,13 @@ int main(void) {
 
     Timer_Start();
 
+    char *tx_data = "2;1;3;7;6;9\n";
+
     printf("Start\n");
     while (1) {
+//        HAL_UART_Transmit(&huart2, (uint8_t*) tx_data, strlen(tx_data), HAL_MAX_DELAY);
+//        HAL_UART_Transmit(&huart4, (uint8_t*) tx_data, strlen(tx_data), HAL_MAX_DELAY);
+
         Ultrasonic_Request(ULTRASONIC_LEFT);
         Ultrasonic_Read(ULTRASONIC_LEFT);
         Ultrasonic_Request(ULTRASONIC_CENTER);

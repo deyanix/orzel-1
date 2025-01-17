@@ -18,7 +18,7 @@ Ultrasonic_TypeDef __ultrasonicLeft = {
  */
 Ultrasonic_Distance __ultrasonicCenterDistance = {0};
 Ultrasonic_TypeDef __ultrasonicCenter = {
-    .TriggerPin             = GPIO_PB14,
+    .TriggerPin             = GPIO_PC4,
     .EchoPin                = GPIO_PB6,
     .Timer                  = &htim4,
     .TimerChannelRising     = TIM_CHANNEL_1,

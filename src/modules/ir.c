@@ -15,8 +15,8 @@ void IR_Timer_CaptureCallback(TIM_HandleTypeDef *htim) {
     uint32_t pulseWidth;
     IR_Pulse pulse;
 
-    if (htim == &htim2) {
-        switch (HAL_TIM_GetActiveChannel(&htim2)) {
+    if (htim == &htim15) {
+        switch (HAL_TIM_GetActiveChannel(&htim15)) {
             case HAL_TIM_ACTIVE_CHANNEL_1:
                 pulseWidth = HAL_TIM_ReadCapturedValue(htim, TIM_CHANNEL_1);
                 pulse = IR_DecodePulse(pulseWidth);

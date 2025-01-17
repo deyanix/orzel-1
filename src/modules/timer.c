@@ -31,6 +31,7 @@ void Timer_Init(void) {
     Timer6_Init();
     Timer7_Init();
     Timer8_Init();
+    Timer15_Init();
 }
 
 void Timer_Base_Init(TIM_HandleTypeDef *htim) {
@@ -48,6 +49,8 @@ void Timer_Base_Init(TIM_HandleTypeDef *htim) {
         Timer7_Base_Init();
     } else if (htim->Instance == TIM8) {
         Timer8_Base_Init();
+    } else if (htim->Instance == TIM15) {
+        Timer15_Base_Init();
     }
 }
 
@@ -66,6 +69,8 @@ void Timer_Base_DeInit(TIM_HandleTypeDef *htim) {
         Timer7_Base_DeInit();
     } else if (htim->Instance == TIM8) {
         Timer8_Base_DeInit();
+    } else if (htim->Instance == TIM15) {
+        Timer15_Base_DeInit();
     }
 }
 
@@ -76,6 +81,7 @@ void Timer_Start(void) {
     Timer4_Start();
     Timer6_Start();
     Timer8_Start();
+    Timer15_Start();
 }
 
 void Timer1_Init(void) {
@@ -131,6 +137,10 @@ void Timer1_Start(void) {
 }
 
 void Timer2_Init(void) {
+    TIM_ClockConfigTypeDef clockSourceConfig = {0};
+    TIM_SlaveConfigTypeDef slaveConfig = {0};
+    TIM_MasterConfigTypeDef masterConfig = {0};
+
     htim2.Instance = TIM2;
     htim2.Init.Prescaler = 79;
     htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -139,57 +149,36 @@ void Timer2_Init(void) {
     htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
     SYS_HandleError(HAL_TIM_Base_Init(&htim2));
 
-    TIM_ClockConfigTypeDef clockSourceConfig = {0};
     clockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     SYS_HandleError(HAL_TIM_ConfigClockSource(&htim2, &clockSourceConfig));
     SYS_HandleError(HAL_TIM_IC_Init(&htim2));
 
-    TIM_SlaveConfigTypeDef slaveConfig = {0};
     slaveConfig.SlaveMode = TIM_SLAVEMODE_RESET;
     slaveConfig.InputTrigger = TIM_TS_TI1F_ED;
     slaveConfig.TriggerPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
     slaveConfig.TriggerFilter = 0;
     SYS_HandleError(HAL_TIM_SlaveConfigSynchro(&htim2, &slaveConfig));
 
-    TIM_MasterConfigTypeDef masterConfig = {0};
     masterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     masterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     SYS_HandleError(HAL_TIMEx_MasterConfigSynchronization(&htim2, &masterConfig));
-
-    TIM_IC_InitTypeDef configIC = {0};
-    configIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
-    configIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-    configIC.ICPrescaler = TIM_ICPSC_DIV1;
-    configIC.ICFilter = 0;
-    SYS_HandleError(HAL_TIM_IC_ConfigChannel(&htim2, &configIC, TIM_CHANNEL_1));
-
 }
 
 void Timer2_Base_Init(void) {
-    GPIO_InitPort(GPIO_PA0->Port);
-    GPIO_InitAlternate(GPIO_PA0, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_FREQ_LOW, GPIO_AF1_TIM2);
-
     __HAL_RCC_TIM2_CLK_ENABLE();
-    HAL_NVIC_SetPriority(TIM2_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM2_IRQn);
 }
 
 void Timer2_Base_DeInit(void) {
     __HAL_RCC_TIM2_CLK_DISABLE();
-
-    GPIO_DeInit(GPIO_PA0);
-    HAL_NVIC_DisableIRQ(TIM2_IRQn);
 }
 
 void Timer2_Start(void) {
     SYS_HandleError(HAL_TIM_Base_Start(&htim2));
-    SYS_HandleError(HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1));
 }
 
 void Timer3_Init(void) {
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
-    TIM_IC_InitTypeDef sConfigIC = {0};
 
     htim3.Instance = TIM3;
     htim3.Init.Prescaler = 7999;
@@ -206,16 +195,6 @@ void Timer3_Init(void) {
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     SYS_HandleError(HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig));
-
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-    sConfigIC.ICFilter = 0;
-    SYS_HandleError(HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_1));
-
-    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
-    sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-    SYS_HandleError(HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_2));
 }
 
 void Timer3_Base_Init(void) {
@@ -366,7 +345,7 @@ void Timer8_Init(void) {
     htim8.Instance = TIM8;
     htim8.Init.Prescaler = 7999;
     htim8.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim8.Init.Period = 4999;
+    htim8.Init.Period = 0xFFFF;
     htim8.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim8.Init.RepetitionCounter = 0;
     htim8.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
@@ -396,13 +375,72 @@ void Timer8_Init(void) {
 
 void Timer8_Base_Init(void) {
     __HAL_RCC_TIM8_CLK_ENABLE();
+}
 
-    HAL_NVIC_SetPriority(TIM8_UP_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(TIM8_UP_IRQn);
+void Timer8_Base_DeInit(void) {
+    __HAL_RCC_TIM8_CLK_DISABLE();
 }
 
 void Timer8_Start(void) {
-    SYS_HandleError(HAL_TIM_Base_Start_IT(&htim8));
+    SYS_HandleError(HAL_TIM_Base_Start(&htim8));
+}
+
+void Timer15_Init(void) {
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_SlaveConfigTypeDef sSlaveConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+    TIM_IC_InitTypeDef sConfigIC = {0};
+
+    htim15.Instance = TIM15;
+    htim15.Init.Prescaler = 79;
+    htim15.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim15.Init.Period = 0xFFFF;
+    htim15.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim15.Init.RepetitionCounter = 0;
+    htim15.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    SYS_HandleError(HAL_TIM_Base_Init(&htim15));
+
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    SYS_HandleError(HAL_TIM_ConfigClockSource(&htim15, &sClockSourceConfig));
+    SYS_HandleError(HAL_TIM_IC_Init(&htim15));
+
+    sSlaveConfig.SlaveMode = TIM_SLAVEMODE_RESET;
+    sSlaveConfig.InputTrigger = TIM_TS_TI1F_ED;
+    sSlaveConfig.TriggerPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+    sSlaveConfig.TriggerFilter = 0;
+    SYS_HandleError(HAL_TIM_SlaveConfigSynchro(&htim15, &sSlaveConfig));
+
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    SYS_HandleError(HAL_TIMEx_MasterConfigSynchronization(&htim15, &sMasterConfig));
+
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+    sConfigIC.ICFilter = 0;
+    SYS_HandleError(HAL_TIM_IC_ConfigChannel(&htim15, &sConfigIC, TIM_CHANNEL_1));
+}
+
+void Timer15_Base_Init(void) {
+    __HAL_RCC_TIM15_CLK_ENABLE();
+
+    GPIO_InitPort(GPIOB);
+    GPIO_InitAlternate(GPIO_PB14, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_AF14_TIM15);
+
+    HAL_NVIC_SetPriority(TIM1_BRK_TIM15_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TIM1_BRK_TIM15_IRQn);
+}
+
+void Timer15_Base_DeInit(void) {
+    __HAL_RCC_TIM15_CLK_DISABLE();
+
+    GPIO_DeInit(GPIO_PB14);
+    HAL_NVIC_DisableIRQ(TIM1_BRK_TIM15_IRQn);
+}
+
+void Timer15_Start(void) {
+    SYS_HandleError(HAL_TIM_Base_Start(&htim15));
+    SYS_HandleError(HAL_TIM_IC_Start_IT(&htim15, TIM_CHANNEL_1));
 }
 
 void TIM2_IRQHandler(void) {
@@ -415,4 +453,8 @@ void TIM6_IRQHandler(void) {
 
 void TIM8_IRQHandler(void) {
     HAL_TIM_IRQHandler(&htim8);
+}
+
+void TIM1_BRK_TIM15_IRQHandler(void) {
+    HAL_TIM_IRQHandler(&htim15);
 }
