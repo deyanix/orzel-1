@@ -64,13 +64,8 @@ int main(void) {
 
     Timer_Start();
 
-    char *tx_data = "2;1;3;7;6;9\n";
-
     printf("Start\n");
     while (1) {
-//        HAL_UART_Transmit(&huart2, (uint8_t*) tx_data, strlen(tx_data), HAL_MAX_DELAY);
-//        HAL_UART_Transmit(&huart4, (uint8_t*) tx_data, strlen(tx_data), HAL_MAX_DELAY);
-
         Ultrasonic_Request(ULTRASONIC_LEFT);
         Ultrasonic_Read(ULTRASONIC_LEFT);
         Ultrasonic_Request(ULTRASONIC_CENTER);

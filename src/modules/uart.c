@@ -46,15 +46,17 @@ void UART2_Init(void) {
 }
 
 void UART2_InitPeriph(void) {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
     RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
     PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
     SYS_HandleError(HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit));
 
     __HAL_RCC_USART2_CLK_ENABLE();
     GPIO_InitPort(GPIOA);
-    GPIO_InitAlternate(GPIO_PA2, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_AF7_USART2);
-    GPIO_InitAlternate(GPIO_PA3, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_AF7_USART2);
+    GPIO_InitAlternate(GPIO_PA2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_AF7_USART2);
+    GPIO_InitAlternate(GPIO_PA3, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_FREQ_VERY_HIGH, GPIO_AF7_USART2);
 }
 
 void UART2_DeInitPeriph(void) {
