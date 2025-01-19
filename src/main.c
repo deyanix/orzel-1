@@ -64,6 +64,7 @@ int main(void) {
 
     Timer_Start();
 
+    char tx_data[128];
     printf("Start\n");
     while (1) {
         Ultrasonic_Request(ULTRASONIC_LEFT);
@@ -72,6 +73,16 @@ int main(void) {
         Ultrasonic_Read(ULTRASONIC_CENTER);
         Ultrasonic_Request(ULTRASONIC_RIGHT);
         Ultrasonic_Read(ULTRASONIC_RIGHT);
+
+        sprintf(tx_data, "%lu;%lu;%lu;%lu;%lu;%lu\n",
+                ULTRASONIC_LEFT->Distance->NormalizedDistance,
+                ULTRASONIC_LEFT->Distance->Variability,
+                ULTRASONIC_CENTER->Distance->NormalizedDistance,
+                ULTRASONIC_CENTER->Distance->Variability,
+                ULTRASONIC_RIGHT->Distance->NormalizedDistance,
+                ULTRASONIC_RIGHT->Distance->Variability);
+        HAL_UART_Transmit(&huart2, (uint8_t*) tx_data, strlen(tx_data), HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart4, (uint8_t*) tx_data, strlen(tx_data), HAL_MAX_DELAY);
 
         uint8_t variabilityLeft = ULTRASONIC_LEFT->Distance->Variability < 10 && ULTRASONIC_LEFT->Distance->NormalizedDistance < 400;
         uint8_t variabilityCenter = ULTRASONIC_CENTER->Distance->Variability < 10 && ULTRASONIC_CENTER->Distance->NormalizedDistance < 400;

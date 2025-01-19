@@ -30,7 +30,7 @@ void Timer_Init(void) {
     Timer4_Init();
     Timer6_Init();
     Timer7_Init();
-    Timer8_Init();
+    //Timer8_Init();
     Timer15_Init();
 }
 
@@ -80,7 +80,7 @@ void Timer_Start(void) {
     Timer3_Start();
     Timer4_Start();
     Timer6_Start();
-    Timer8_Start();
+    //Timer8_Start();
     Timer15_Start();
 }
 
@@ -179,6 +179,7 @@ void Timer2_Start(void) {
 void Timer3_Init(void) {
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_MasterConfigTypeDef sMasterConfig = {0};
+    TIM_IC_InitTypeDef sConfigIC = {0};
 
     htim3.Instance = TIM3;
     htim3.Init.Prescaler = 7999;
@@ -195,6 +196,16 @@ void Timer3_Init(void) {
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     SYS_HandleError(HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig));
+
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+    sConfigIC.ICFilter = 0;
+    SYS_HandleError(HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_1));
+
+    sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
+    sConfigIC.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+    SYS_HandleError(HAL_TIM_IC_ConfigChannel(&htim3, &sConfigIC, TIM_CHANNEL_2));
 }
 
 void Timer3_Base_Init(void) {
